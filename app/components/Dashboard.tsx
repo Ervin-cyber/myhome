@@ -4,6 +4,7 @@ import { auth, db } from './firebase';
 import { signOut } from 'firebase/auth';
 import { ref, onValue, set, push, serverTimestamp } from 'firebase/database';
 import { Button, TextField } from '@mui/material';
+import NumberSpinner from './NumberSpinner';
 
 
 interface DashboardProps {
@@ -18,7 +19,7 @@ interface DashboardProps {
 export default function Dashboard({ user, onError }: DashboardProps) {
     const [currentTemp, setCurrentTemp] = useState<number | null>(null);
     const [tempTimeStamp, setTempTimeStamp] = useState<Date | null>(null);
-    const [targetTemp, setTargetTemp] = useState<string>('');
+    const [targetTemp, setTargetTemp] = useState<number>(10);
     const [saving, setSaving] = useState<boolean>(false);
 
 
@@ -110,13 +111,8 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                 <label className="text-xs text-slate-500">Set Target Temperature</label>
                 <div className="flex gap-2 mt-2">
                     <NumberSpinner
-                        label="Target Temperature"
                         value={targetTemp}
                         onChange={handleTargetChange}
-                        className="flex-1 border rounded-xl p-3"
-                        //placeholder="22.5"
-                        type="number"
-                        step="0.1"
                     />
                     <Button
                         onClick={() => saveTarget()}
