@@ -1,12 +1,12 @@
 "use client"
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import Dashboard from "./components/Dashboard";
 import AuthCard from "./components/AuthCard";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "./components/firebase";
 import { CircularProgress } from "@mui/material";
+import FloatingParticles from "./components/FloatingParticles";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -30,7 +30,8 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-300 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-300 flex items-center justify-center">
+      <FloatingParticles />
       <div className="absolute top-4 left-0 right-0 flex justify-center">
         {error && (
           <div className="bg-red-500 text-white px-4 py-2 rounded-xl shadow text-sm">

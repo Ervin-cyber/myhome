@@ -1,0 +1,1 @@
+ALTER TABLE `system_state` ADD `heating_util` integer;
