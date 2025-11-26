@@ -13,6 +13,7 @@ export async function GET() {
     return Response.json({
         'temperature': latestTemp[0]?.value,
         'last_updated': latestTemp[0]?.timestamp,
+        'heating_on': state[0]?.heatingOn,
         'set_temp': state[0]?.targetTemp,
         'heating_until': state[0]?.heatingUntil,
     });
