@@ -13,6 +13,8 @@ RUN apt-get update && \
 COPY package*.json ./
 RUN npm install
 
+RUN rm -rf .next
+
 # Copy the rest of the app
 COPY . .
 
