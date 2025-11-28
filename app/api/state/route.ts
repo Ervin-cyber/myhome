@@ -1,23 +1,24 @@
 import { db } from "@/src/db";
 import { systemState, heatingLog } from "@/src/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export async function GET() {
   const state = await db.select().from(systemState).where(eq(systemState.id, 1));
   return Response.json(state[0]);
 }
 
+const getCurrentTimestamp = () => {
+  return Math.floor(Date.now() / 1000);
+}
+
 export async function POST(req: Request) {
   const body = await req.json();
   let { targetTemp, heatingUntil, heatingOn } = body;
 
-  const current_ts = Math.floor(Date.now() / 1000);
-
-  if (heatingUntil > current_ts + 3610) {
+  if (heatingUntil > getCurrentTimestamp() + 3610) {
     heatingUntil = 0;
   }
 
-  // Get current system state
   const old = await db
     .select()
     .from(systemState)
@@ -25,11 +26,16 @@ export async function POST(req: Request) {
 
   const previous = old[0];
 
-  // If heating state changed → log it
   if (previous != null && previous?.heatingOn !== heatingOn) {
+    const lastLog = await db
+      .select()
+      .from(heatingLog)
+      .orderBy(desc(heatingLog.timestamp))
+      .limit(1)
     await db.insert(heatingLog).values({
       fromState: previous.heatingOn,
-      toState: heatingOn
+      toState: heatingOn,
+      runTime: previous?.heatingOn ? getCurrentTimestamp() - lastLog[0]?.timestamp : 0
     });
   } else if (previous?.heatingOn !== heatingOn) {
     await db
@@ -38,19 +44,16 @@ export async function POST(req: Request) {
         id: 1,
         targetTemp,
         heatingUntil,
-        heatingOn,
-        updatedAt: new Date().toISOString()
+        heatingOn
       })
   }
 
-  // Update the actual system state
   await db
     .update(systemState)
     .set({
       targetTemp,
       heatingUntil,
-      heatingOn,
-      updatedAt: new Date().toISOString()
+      heatingOn
     })
     .where(eq(systemState.id, 1));
 

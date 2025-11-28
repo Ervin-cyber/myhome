@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
   await db.insert(temperatureReadings).values({
     value,
-    timestamp: Date.now(),
+    timestamp: Math.floor(Date.now() / 1000),
   });
 
   return Response.json({ success: true });

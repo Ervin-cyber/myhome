@@ -15,17 +15,32 @@ interface DashboardProps {
     onError: (msg: string) => void;
 }
 
+type Stat = {
+    temp_min: number;
+    temp_max: number;
+    temp_avg: number;
+    run_time: number;
+    count_on: number;
+}
+
+const getHoursFromSeconds = (seconds: number) => {
+    return Math.floor(seconds / 3600);
+}
+
+const getMinutesFromSeconds = (seconds: number) => {
+    return Math.floor((seconds % 3600) / 60);
+}
+
 export default function Dashboard({ user, onError }: DashboardProps) {
     const [currentTemp, setCurrentTemp] = useState<TemperatureReading>();
     const [heating, setHeating] = useState<boolean>(false);
     const [tempTimeStamp, setTempTimeStamp] = useState<Date | null>(null);
     const [targetTemp, setTargetTemp] = useState<number>(0);
     const [saving, setSaving] = useState<boolean>(false);
+    const [stats, setStats] = useState<Stat>();
 
     useEffect(() => {
         const tempStream = new EventSource("/api/temp/stream");
-
-        const stateStream = new EventSource("/api/state/stream");
 
         tempStream.onmessage = (event) => {
             const data = JSON.parse(event.data) as TemperatureReading;
@@ -33,15 +48,25 @@ export default function Dashboard({ user, onError }: DashboardProps) {
             setTempTimeStamp(data?.timestamp ? new Date(Number(data.timestamp)) : null);
         };
 
+        const stateStream = new EventSource("/api/state/stream");
+
         stateStream.onmessage = (event) => {
             const data = JSON.parse(event.data) as SystemState;
             setHeating(data?.heatingOn ? true : false);
             setTargetTemp(data?.targetTemp);
         };
 
+        const statsStream = new EventSource("/api/stats/stream");
+
+        statsStream.onmessage = (event) => {
+            const data = JSON.parse(event.data) as Stat;
+            setStats(data);
+        };
+
         return () => {
             tempStream.close();
             stateStream.close();
+            statsStream.close();
         }
     }, []);
 
@@ -199,18 +224,30 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                     </div>
 
                     {/* Footer Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
-                        {[
-                            { label: 'Avg Today', value: '21.4°C', color: 'text-blue-400' },
-                            { label: 'Max Today', value: '23.2°C', color: 'text-red-400' },
-                            { label: 'Min Today', value: '19.8°C', color: 'text-cyan-400' },
-                            { label: 'Runtime', value: '4h 23m', color: 'text-orange-400' }
-                        ].map((stat, i) => (
-                            <div key={i} className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
-                                <p className="text-gray-500 text-xs uppercase tracking-wide">{stat.label}</p>
-                                <p className={`text-xl font-semibold ${stat.color}`}>{stat.value}</p>
+                    <div className="mt-3 bg-gray-800/50 backdrop-blur rounded-2xl p-3 border border-gray-700/50">
+                        <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Last 24 Hours</span>
+                        <div className="grid grid-cols-3 xs:grid-cols-2 sm:xs:grid-cols-2 md:grid-cols-5 gap-4">
+                            <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+                                <p className="text-gray-500 text-xs uppercase tracking-wide">Avg</p>
+                                <p className={`text-xl font-semibold text-blue-400`}>{stats?.temp_avg}°C</p>
                             </div>
-                        ))}
+                            <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+                                <p className="text-gray-500 text-xs uppercase tracking-wide">Max</p>
+                                <p className={`text-xl font-semibold text-red-400`}>{stats?.temp_max}°C</p>
+                            </div>
+                            <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+                                <p className="text-gray-500 text-xs uppercase tracking-wide">Min</p>
+                                <p className={`text-xl font-semibold text-cyan-400`}>{stats?.temp_min}°C</p>
+                            </div>
+                            <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+                                <p className="text-gray-500 text-xs uppercase tracking-wide">Runtime</p>
+                                <p className={`text-xl font-semibold text-orange-400`}>{getHoursFromSeconds(stats?.run_time ?? 0)}h {getMinutesFromSeconds(stats?.run_time ?? 0)}m</p>
+                            </div>
+                            <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
+                                <p className="text-gray-500 text-xs uppercase tracking-wide">Cycles</p>
+                                <p className={`text-xl font-semibold text-orange-400`}>{stats?.count_on}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </HeatingBorder>

@@ -9,27 +9,34 @@ export async function GET() {
 
   const stream = new ReadableStream({
     start(controller) {
-      interval = setInterval(async () => {// Send new data every second
+
+      async function sendTemperature() {
         try {
           const latestTemp = await db
-            .select()
+            .select({
+              value: temperatureReadings.value,
+              timestamp: temperatureReadings.timestamp,
+            })
             .from(temperatureReadings)
             .orderBy(desc(temperatureReadings.timestamp))
-            .limit(1);
-
-          if (latestTemp.length === 0) return;
-
-          controller.enqueue(// Try sending only if controller is still open
+            .limit(1) ?? [];
+          controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(latestTemp[0])}\n\n`)
           );
-        } catch (err) {
-          console.error("SSE send error:", err);
+        } catch (error) {
+          console.error("SSE send error:", error);
         }
-      }, 2000);
+      }
+
+      sendTemperature();
+
+      interval = setInterval(async () => {
+        await sendTemperature();
+      }, 5000);
     },
 
     cancel() {
-      clearInterval(interval); // When client disconnects, cleanup
+      clearInterval(interval);
     },
   });
 

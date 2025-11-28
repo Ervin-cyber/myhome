@@ -9,21 +9,26 @@ export async function GET() {
 
   const stream = new ReadableStream({
     start(controller) {
-      interval = setInterval(async () => {// Send new data every second
+
+      async function sendState() {
         try {
           const latestState = await db
             .select()
             .from(systemState)
             .limit(1);
 
-          if (latestState.length === 0) return;
-
-          controller.enqueue(// Try sending only if controller is still open
+          controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(latestState[0])}\n\n`)
           );
         } catch (err) {
           console.error("SSE send error:", err);
         }
+      }
+
+      sendState();
+
+      interval = setInterval(async () => {
+        await sendState();
       }, 2000);
     },
 
