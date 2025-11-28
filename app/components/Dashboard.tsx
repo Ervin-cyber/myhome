@@ -225,19 +225,19 @@ export default function Dashboard({ user, onError }: DashboardProps) {
 
                     {/* Footer Stats */}
                     <div className="mt-3 bg-gray-800/50 backdrop-blur rounded-2xl p-3 border border-gray-700/50">
-                        <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Last 24 Hours</span>
+                        <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">-Last 24 Hours-</span>
                         <div className="grid grid-cols-3 xs:grid-cols-2 sm:xs:grid-cols-2 md:grid-cols-5 gap-4">
                             <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
                                 <p className="text-gray-500 text-xs uppercase tracking-wide">Avg</p>
-                                <p className={`text-xl font-semibold text-blue-400`}>{stats?.temp_avg}°C</p>
+                                <p className={`text-xl font-semibold text-blue-400`}>{Number(stats?.temp_avg).toFixed(1)}°C</p>
                             </div>
                             <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
                                 <p className="text-gray-500 text-xs uppercase tracking-wide">Max</p>
-                                <p className={`text-xl font-semibold text-red-400`}>{stats?.temp_max}°C</p>
+                                <p className={`text-xl font-semibold text-red-400`}>{Number(stats?.temp_max).toFixed(1)}°C</p>
                             </div>
                             <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
                                 <p className="text-gray-500 text-xs uppercase tracking-wide">Min</p>
-                                <p className={`text-xl font-semibold text-cyan-400`}>{stats?.temp_min}°C</p>
+                                <p className={`text-xl font-semibold text-cyan-400`}>{Number(stats?.temp_min).toFixed(1)}°C</p>
                             </div>
                             <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
                                 <p className="text-gray-500 text-xs uppercase tracking-wide">Runtime</p>
