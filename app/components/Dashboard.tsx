@@ -45,7 +45,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
         tempStream.onmessage = (event) => {
             const data = JSON.parse(event.data) as TemperatureReading;
             setCurrentTemp(data);
-            setTempTimeStamp(data?.timestamp ? new Date(Number(data.timestamp)) : null);
+            setTempTimeStamp(data?.timestamp ? new Date(Number(data.timestamp*1000)) : null);
         };
 
         const stateStream = new EventSource("/api/state/stream");
