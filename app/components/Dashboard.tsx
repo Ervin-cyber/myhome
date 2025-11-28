@@ -36,6 +36,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
     const [heating, setHeating] = useState<boolean>(false);
     const [tempTimeStamp, setTempTimeStamp] = useState<Date | null>(null);
     const [targetTemp, setTargetTemp] = useState<number>(0);
+    const [heatingUntil, setHeatingUntil] = useState<number>(0);
     const [saving, setSaving] = useState<boolean>(false);
     const [stats, setStats] = useState<Stat>();
 
@@ -54,6 +55,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
             const data = JSON.parse(event.data) as SystemState;
             setHeating(data?.heatingOn ? true : false);
             setTargetTemp(data?.targetTemp);
+            setHeatingUntil(data?.heatingUntil ?? 0);
         };
 
         const statsStream = new EventSource("/api/stats/stream");
@@ -71,13 +73,13 @@ export default function Dashboard({ user, onError }: DashboardProps) {
     }, []);
 
     useEffect(() => {
-        if (targetTemp >= 10) {
-            saveTarget(targetTemp);
+        if (targetTemp >= 10 || heatingUntil > 0) {
+            saveTarget(targetTemp, heatingUntil);
         }
-    }, [targetTemp]);
+    }, [targetTemp, heatingUntil]);
 
 
-    const saveTarget = async (val: number) => {
+    const saveTarget = async (val: number, heatingUntil: number) => {
         if (isNaN(val)) {
             onError('Invalid number');
             return;
@@ -89,7 +91,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ "targetTemp": val, "heatingOn": heating }),
+                body: JSON.stringify({ "targetTemp": val/*, "heatingOn": heating*/, "heatingUntil": heatingUntil }),
             })
 
         } catch (e: unknown) {
@@ -124,7 +126,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
         setTargetTemp(Number(e));
     };
 
-    const quickTemps = [18, 20, 21, 22, 24];
+    const quickTemps = [19, 20, 21, 22];
 
     return (
         <div className="min-h-screen min-w-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
@@ -223,9 +225,47 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                         </div>
                     </div>
 
+                    {/* Boost Timers */}
+                    <div className="mt-3 bg-gray-800/50 backdrop-blur rounded-2xl p-3 border border-gray-700/50">
+                        <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Boost Heating</span>
+                        <div className="grid grid-cols-2 gap-3 mt-3">
+                            <button
+                                onClick={() => setHeatingUntil(15)}
+                                disabled={heatingUntil !== 0}
+                                className={`py-3 rounded-xl font-medium transition-all active:scale-95 flex items-center justify-center gap-2 ${heatingUntil !== 0
+                                    ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
+                                    : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50'
+                                    }`}>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                15 min
+                            </button>
+                            <button
+                                onClick={() => setHeatingUntil(30)}
+                                disabled={heatingUntil !== 0}
+                                className={`py-3 rounded-xl font-medium transition-all active:scale-95 flex items-center justify-center gap-2 ${heatingUntil !== 0
+                                    ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
+                                    : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50'
+                                    }`}>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                30 min
+                            </button>
+                        </div>
+                        {heatingUntil !== 0 && (
+                            <button
+                                onClick={() => setHeatingUntil(0)}
+                                className="w-full mt-2 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-all">
+                                Cancel Boost
+                            </button>
+                        )}
+                    </div>
+
                     {/* Footer Stats */}
                     <div className="mt-3 bg-gray-800/50 backdrop-blur rounded-2xl p-3 border border-gray-700/50">
-                        <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">-Last 24 Hours-</span>
+                        <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Last 24 Hours</span>
                         <div className="grid grid-cols-3 xs:grid-cols-2 sm:xs:grid-cols-2 md:grid-cols-5 gap-4">
                             <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/30">
                                 <p className="text-gray-500 text-xs uppercase tracking-wide">Avg</p>
@@ -250,7 +290,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                         </div>
                     </div>
                 </div>
-            </HeatingBorder>
-        </div>
+            </HeatingBorder >
+        </div >
     );
 }

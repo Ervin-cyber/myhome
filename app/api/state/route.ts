@@ -15,7 +15,9 @@ export async function POST(req: Request) {
   const body = await req.json();
   let { targetTemp, heatingUntil, heatingOn } = body;
 
-  if (heatingUntil > getCurrentTimestamp() + 3610) {
+  if (heatingUntil == 15 || heatingUntil == 30) {
+    heatingUntil = getCurrentTimestamp() + (60 * heatingUntil);
+  } else if (heatingUntil > getCurrentTimestamp() + 3610) {
     heatingUntil = 0;
   }
 
@@ -26,7 +28,7 @@ export async function POST(req: Request) {
 
   const previous = old[0];
 
-  if (previous != null && previous?.heatingOn !== heatingOn) {
+  if (previous != null && heatingOn && previous?.heatingOn !== heatingOn) {
     const lastLog = await db
       .select()
       .from(heatingLog)
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
       toState: heatingOn,
       runTime: previous?.heatingOn ? getCurrentTimestamp() - lastLog[0]?.timestamp : 0
     });
-  } else if (previous?.heatingOn !== heatingOn) {
+  } else if (previous?.heatingOn !== heatingOn && heatingOn) {
     await db
       .insert(systemState)
       .values({

@@ -1,6 +1,9 @@
 # Use a Debian-based Node image for ARM
 FROM --platform=linux/arm64 node:20-bullseye
 
+# Copy env BEFORE build
+COPY .env .env
+
 # Set working directory
 WORKDIR /app
 
