@@ -73,14 +73,8 @@ export default function Dashboard({ user, onError }: DashboardProps) {
         }
     }, []);
 
-    useEffect(() => {
-        if (targetTemp >= 10 || heatingUntil >= 0) {
-            saveState(targetTemp, heatingUntil);
-        }
-    }, [targetTemp, heatingUntil]);
-
-
     const saveState = async (val: number, heatingUntil: number) => {
+        if (val < 10 || heatingUntil < 0) return;
         if (isNaN(val)) {
             onError('Invalid number');
             return;
@@ -94,27 +88,6 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                 },
                 body: JSON.stringify({ "targetTemp": val/*, "heatingOn": heating*/, "heatingUntil": heatingUntil }),
             })
-
-        } catch (e: unknown) {
-            if (e instanceof Error) onError(e.message);
-            else onError('Failed to save');
-        }
-        setSaving(false);
-    };
-
-    const saveHeatingUntil = async (val: number) => {
-        if (isNaN(val)) {
-            onError('Invalid number');
-            return;
-        }
-        setSaving(true);
-        try {
-            //await set(ref(db, 'Home/HeatingUntil'), (Date.now() / 1000) + (val * 6));
-            /*await set(ref(db, 'Home/lastSetBy'), {
-                uid: user.uid,
-                email: user.email,
-                time: serverTimestamp(),
-            });*/
 
         } catch (e: unknown) {
             if (e instanceof Error) onError(e.message);
@@ -187,7 +160,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                             <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Set Target Temperature</span>
 
                             <div className="flex items-center justify-center gap-4 my-8">
-                                <button onClick={() => setTargetTemp(Math.max(10, targetTemp - 0.5))}
+                                <button onClick={() => saveState(Math.max(10, targetTemp - 0.5), heatingUntil)}
                                     className="w-14 h-14 rounded-xl bg-gray-700 hover:bg-gray-600 text-white text-2xl font-light transition-all active:scale-95">
                                     −
                                 </button>
@@ -195,7 +168,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                                     <span className="text-5xl font-light text-white">{targetTemp}</span>
                                     <span className="text-2xl text-gray-400">°C</span>
                                 </div>
-                                <button onClick={() => setTargetTemp(Math.min(30, targetTemp + 0.5))}
+                                <button onClick={() => saveState(Math.min(30, targetTemp + 0.5), heatingUntil)}
                                     className="w-14 h-14 rounded-xl bg-gray-700 hover:bg-gray-600 text-white text-2xl font-light transition-all active:scale-95">
                                     +
                                 </button>
@@ -212,7 +185,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                         <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Quick Actions</span>
                         <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 mt-4">
                             {quickTemps.map((t, i) => (
-                                <button key={i} onClick={() => setTargetTemp(t)}
+                                <button key={i} onClick={() => saveState(t, heatingUntil)}
                                     className={`py-3 rounded-xl font-medium transition-all active:scale-95 ${targetTemp === t
                                         ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
                                         : 'bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 border border-gray-600/50'}`}>
@@ -227,7 +200,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                         <span className="text-gray-400 text-sm font-medium uppercase tracking-wide">Boost Heating</span>
                         <div className="grid grid-cols-2 gap-3 mt-3">
                             <button
-                                onClick={() => setHeatingUntil(15)}
+                                onClick={() => saveState(targetTemp, 15)}
                                 disabled={heatingUntil !== 0}
                                 className={`py-3 rounded-xl font-medium transition-all active:scale-95 flex items-center justify-center gap-2 ${heatingUntil !== 0
                                     ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
@@ -239,7 +212,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                                 15 min
                             </button>
                             <button
-                                onClick={() => setHeatingUntil(30)}
+                                onClick={() => saveState(targetTemp, 30)}
                                 disabled={heatingUntil !== 0}
                                 className={`py-3 rounded-xl font-medium transition-all active:scale-95 flex items-center justify-center gap-2 ${heatingUntil !== 0
                                     ? 'bg-gray-700/30 text-gray-500 cursor-not-allowed'
@@ -253,7 +226,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
                         </div>
                         {heatingUntil !== 0 && (
                             <button
-                                onClick={() => setHeatingUntil(0)}
+                                onClick={() => saveState(targetTemp, 0)}
                                 className="w-full mt-2 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium transition-all">
                                 Cancel Boost
                             </button>
