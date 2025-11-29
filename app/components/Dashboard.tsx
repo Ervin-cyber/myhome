@@ -1,7 +1,7 @@
 import { SystemState, TemperatureReading } from '@/src/schema';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { signOut } from 'firebase/auth';
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { auth } from './firebase';
 import HeatingBorder from './HeatingBorder';
 import HeatingIcon from './HeatingOnIcon';
@@ -32,7 +32,6 @@ const getMinutesFromSeconds = (seconds: number) => {
 }
 
 export default function Dashboard({ user, onError }: DashboardProps) {
-    const isMountingRef = useRef(false);
     const [currentTemp, setCurrentTemp] = useState<TemperatureReading>();
     const [heating, setHeating] = useState<boolean>(false);
     const [tempTimeStamp, setTempTimeStamp] = useState<Date | null>(null);
@@ -40,10 +39,6 @@ export default function Dashboard({ user, onError }: DashboardProps) {
     const [heatingUntil, setHeatingUntil] = useState<number>(-1);
     const [saving, setSaving] = useState<boolean>(false);
     const [stats, setStats] = useState<Stat>();
-
-    useEffect(() => {
-        isMountingRef.current = true;
-    }, []);
 
     useEffect(() => {
         const tempStream = new EventSource("/api/temp/stream");
@@ -78,11 +73,6 @@ export default function Dashboard({ user, onError }: DashboardProps) {
     }, []);
 
     useEffect(() => {
-        if (!isMountingRef.current) {
-            return;
-        } else {
-            isMountingRef.current = false;
-        }
         if (targetTemp >= 10 || heatingUntil >= 0) {
             saveTarget(targetTemp, heatingUntil);
         }
