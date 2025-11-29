@@ -52,6 +52,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
         const stateStream = new EventSource("/api/state/stream");
 
         stateStream.onmessage = (event) => {
+            if (saving) return;
             const data = JSON.parse(event.data) as SystemState;
             setHeating(data?.heatingOn ? true : false);
             setTargetTemp(data?.targetTemp);
@@ -74,12 +75,12 @@ export default function Dashboard({ user, onError }: DashboardProps) {
 
     useEffect(() => {
         if (targetTemp >= 10 || heatingUntil >= 0) {
-            saveTarget(targetTemp, heatingUntil);
+            saveState(targetTemp, heatingUntil);
         }
     }, [targetTemp, heatingUntil]);
 
 
-    const saveTarget = async (val: number, heatingUntil: number) => {
+    const saveState = async (val: number, heatingUntil: number) => {
         if (isNaN(val)) {
             onError('Invalid number');
             return;
