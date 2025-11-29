@@ -28,18 +28,19 @@ export async function POST(req: Request) {
 
   const previous = old[0];
 
-  if (previous != null && heatingOn && previous?.heatingOn !== heatingOn) {
+  if (previous != null && previous?.heatingOn !== heatingOn && heatingOn != null) {
     const lastLog = await db
       .select()
       .from(heatingLog)
       .orderBy(desc(heatingLog.timestamp))
       .limit(1)
+      
     await db.insert(heatingLog).values({
       fromState: previous.heatingOn,
       toState: heatingOn,
       runTime: previous?.heatingOn ? getCurrentTimestamp() - lastLog[0]?.timestamp : 0
     });
-  } else if (previous?.heatingOn !== heatingOn && heatingOn) {
+  } else if (previous?.heatingOn !== heatingOn && heatingOn != null) {
     await db
       .insert(systemState)
       .values({

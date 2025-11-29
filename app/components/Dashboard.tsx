@@ -73,7 +73,7 @@ export default function Dashboard({ user, onError }: DashboardProps) {
     }, []);
 
     useEffect(() => {
-        if (targetTemp >= 10 || heatingUntil > 0) {
+        if (targetTemp >= 10 || heatingUntil >= 0) {
             saveTarget(targetTemp, heatingUntil);
         }
     }, [targetTemp, heatingUntil]);
@@ -120,10 +120,6 @@ export default function Dashboard({ user, onError }: DashboardProps) {
             else onError('Failed to save');
         }
         setSaving(false);
-    };
-
-    const handleTargetChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setTargetTemp(Number(e));
     };
 
     const quickTemps = [19, 20, 21, 22];
